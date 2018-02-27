@@ -19,7 +19,5 @@ int main (void)
     OCR1A = 18000; 
     TCCR1A = 0x40; // toggle OC1A on output compare match
     TCCR1B = 0x01; // Pre-scaling by 1024 gives clock frequency of 15.6kHz
-    TIMSK1 = 0x02; // Enable timer output compare A match interrupt
-    sei();         // Allow interrupts globally
     while(1);
 }
