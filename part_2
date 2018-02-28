@@ -1,4 +1,5 @@
 #include <asf.h>
+#include <math.h>
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
@@ -6,8 +7,8 @@
 #include "util/delay.h"
 
 ISR(TIMER1_COMPA_vect) {
-	OCR1A += 18000;
-	OCR1A %= 0xFFFF;
+     OCR1A += (1/(440.0*2)) / (1/(16.0*pow(10.0,6)));
+     OCR1A %= 0xFFFF;
 }
 
 int main (void)
@@ -16,8 +17,8 @@ int main (void)
     DDRB = 0x02;   // Allow PB1 (PIN 9) to be an output pin on the Arduino
     TIMSK1 = 0x02; // Enable timer output compare A match interrupt
     sei();         // Allow interrupts globally
-    OCR1A = 18000; 
     TCCR1A = 0x40; // toggle OC1A on output compare match
     TCCR1B = 0x01; // Pre-scaling by 1024 gives clock frequency of 15.6kHz
-    while(1);
+    OCR1A = (1/(440.0*2)) / (1/(16.0*pow(10.0,6)));
+    while(1);      // Run program forever
 }
