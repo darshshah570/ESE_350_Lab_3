@@ -1,0 +1,17 @@
+#include <asf.h>
+#include <math.h>
+#include <stdio.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "uart.h"
+#include "util/delay.h"
+
+int main (void)
+{
+uart_init();
+DDRB = 0x02;   // Allow PB1 (PIN 9) to be an output pin on the Arduino
+TCCR1A = 0x40; // toggle OC1A on output compare match
+TCCR1B = 0x09; // initialize clock, no prescaling, also enter CTC mode (register = 00001001)
+OCR1A = (1/(440.0*2)) / (1/(16.0*pow(10.0,6)));
+while(1);      // Run program forever
+}
