@@ -11,7 +11,7 @@ ISR(TIMER1_COMPA_vect) {
      OCR1A %= 0xFFFF;
 }
 
-int main (void)
+int main (void) 
 {
     uart_init();
     DDRB = 0x02;   // Allow PB1 (PIN 9) to be an output pin on the Arduino
