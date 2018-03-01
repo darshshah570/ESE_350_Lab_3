@@ -1,0 +1,50 @@
+#include <asf.h>
+#include <math.h>
+#include <stdio.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "uart.h"
+#include "util/delay.h"
+
+volatile int echo_ticks;
+volatile double distance;
+
+ISR(TIMER1_COMPA_vect) {
+	//TIMSK1 &= ~(0x02);
+	TIFR1 = 0x02;
+	TCCR1B |= 0x40;
+	putchar('a');
+}
+
+ISR(TIMER1_CAPT_vect) {
+	//rising edge logic
+	if (PINB & 0x01) {
+		echo_ticks = ICR1;										//store starting edge
+		putchar('c');
+		TCCR1B &= ~(0x40);										//flip bit 5, next interrupt on falling edge
+	}
+	//falling edge logic
+	if (!(PINB & 0x01)) {
+		echo_ticks = ICR1 - echo_ticks;							//falling edge - starting edge
+		distance = echo_ticks/(16.0*pow(10.0,6))*170.0;			//distance in meters
+		putchar('e');
+		TCCR1B |= 0x40;											//flip bit 5, next interrupt on rising edge
+	}
+}
+
+int main (void)
+{
+	uart_init();
+	DDRB = 0x02;												//write from pb1, read from pb0
+	TIMSK1 = 0x22;												//enable input capture and output compare interrupts
+
+	sei();
+	
+	TCCR1B = 0x01;												//start clock, no prescaling
+	PORTB = 0x02;												//set pb1 high
+	TCCR1A = 0x80;												//clear 0c1a on compare match
+	OCR1A = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));		//trigger of 10us
+	//OCR1A = 10;
+	putchar('k');
+	while(1); 													// Run program forever
+}
