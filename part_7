@@ -1,0 +1,21 @@
+#include <asf.h>
+#include <math.h>
+#include <stdio.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "uart.h"
+#include "util/delay.h"
+
+volatile uint16_t test_dac = 0;
+
+int main (void)
+{
+	uart_init();
+	DDRB = 0x1C;	//open PB2,3,4
+	while(1) {
+		test_dac += 1;
+		test_dac %= 8;
+		PORTB = (test_dac << 2)|(DDRB & 0x03);
+		printf("%x\n", PORTB);
+	}
+}
