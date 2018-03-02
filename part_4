@@ -5,30 +5,36 @@
 #include <avr/interrupt.h>
 #include "uart.h"
 #include "util/delay.h"
-
 volatile int echo_ticks;
 volatile double distance;
+//static double ten = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));
 
-ISR(TIMER1_COMPA_vect) {
-	//TIMSK1 &= ~(0x02);
-	TIFR1 = 0x02;
-	TCCR1B |= 0x40;
-	putchar('a');
+ISR(TIMER1_COMPA_vect) {		//output compare
+	putchar('s');			
+	TIMSK1 = (1 << ICIE1);		//disable output compare, enable input capture
+	TCCR1B |= 0x40;				//flip bit 6, next interrupt on rising edge
+	putchar('f');
 }
 
-ISR(TIMER1_CAPT_vect) {
+ISR(TIMER1_CAPT_vect) {			//input capture
+	putchar('p');
 	//rising edge logic
 	if (PINB & 0x01) {
 		echo_ticks = ICR1;										//store starting edge
 		putchar('c');
 		TCCR1B &= ~(0x40);										//flip bit 5, next interrupt on falling edge
+		putchar('j');
 	}
 	//falling edge logic
 	if (!(PINB & 0x01)) {
 		echo_ticks = ICR1 - echo_ticks;							//falling edge - starting edge
 		distance = echo_ticks/(16.0*pow(10.0,6))*170.0;			//distance in meters
 		putchar('e');
-		TCCR1B |= 0x40;											//flip bit 5, next interrupt on rising edge
+		TIMSK1 = 0x02;												//disable input capture, enable output compare
+		PORTB = 0x02;												//set pb1 high
+		OCR1A = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));//trigger of 10us
+		OCR1A %= 0xFFFF;
+		putchar('t');
 	}
 }
 
@@ -36,15 +42,12 @@ int main (void)
 {
 	uart_init();
 	DDRB = 0x02;												//write from pb1, read from pb0
-	TIMSK1 = 0x22;												//enable input capture and output compare interrupts
-
+	TIMSK1 = 0x02;												//enable output compare interrupt
 	sei();
-	
 	TCCR1B = 0x01;												//start clock, no prescaling
 	PORTB = 0x02;												//set pb1 high
-	TCCR1A = 0x80;												//clear 0c1a on compare match
+	TCCR1A = 0x80;												//clear on compare match
 	OCR1A = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));		//trigger of 10us
-	//OCR1A = 10;
-	putchar('k');
+	putchar('o');
 	while(1); 													// Run program forever
 }
