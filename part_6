@@ -14,10 +14,10 @@ int main (void)
 {
 	uart_init();
 	ADMUX = (1 << REFS0); 
-	ADCSRA = (1 << ADEN)|(1 << ADPS2)|(1 << ADPS1)|(1 << ADPS0);		//prescale factor of 128
-	DDRD = 0x40;														// Allow PD6 (PIN 6) to be an output pin on the Arduino
-	TCCR0A = (1 << WGM01)|(1 << COM0A0);								// CTC mode, toggle OC0A on compare match
-	TCCR0B = 0x03;														// Initialize clock, no pre-scaling, enter CTC mode (register = 00000001)
+	ADCSRA = (1 << ADEN)|(1 << ADPS2)|(1 << ADPS1)|(1 << ADPS0);			//prescale factor of 128
+	DDRD = 0x40;									// Allow PD6 (PIN 6) to be an output pin on the Arduino
+	TCCR0A = (1 << WGM01)|(1 << COM0A0);						// CTC mode, toggle OC0A on compare match
+	TCCR0B = 0x03;									// Initialize clock, no pre-scaling, enter CTC mode (register = 00000001)
 	while(1) {
 		ADCSRA |= ((1 << ADSC));
 		while(ADCSRA & (1 << ADSC));
@@ -40,7 +40,6 @@ int main (void)
 			freq = 2000;
 		}
 		num_ticks = (1/((double)freq*2))/(64/(8.0*pow(10.0,6)));
-		printf("%d\n", freq);
-		OCR0A = num_ticks;									// Determine target frequency for TCNT0 counter
+		OCR0A = num_ticks;							// Determine target frequency for TCNT0 counter
 	}
 }
