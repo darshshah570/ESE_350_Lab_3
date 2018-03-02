@@ -11,12 +11,12 @@ volatile int adc_result;
 int main (void)
 {
 	uart_init();
-	ADMUX = (1 << REFS0);
-	ADCSRA = (1 << ADEN);
+	ADMUX = (1 << REFS0); 
+	ADCSRA = (1 << ADEN)|(1 << ADPS2)|(1 << ADPS1);		//prescale factor of 64
 	while(1) {
-		ADCSRA |= (1 << ADSC);
+		ADCSRA |= ((1 << ADSC));
 		while(ADCSRA & (1 << ADSC));
-		adc_result = ADC;
+		adc_result = ADC & 0x03FF;
 		printf("%d\n", adc_result);
 	}
 }
