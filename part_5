@@ -1,0 +1,22 @@
+#include <asf.h>
+#include <math.h>
+#include <stdio.h>
+#include <avr/io.h>
+#include <avr/interrupt.h>
+#include "uart.h"
+#include "util/delay.h"
+
+volatile int adc_result;
+
+int main (void)
+{
+	uart_init();
+	ADMUX = (1 << REFS0);
+	ADCSRA = (1 << ADEN);
+	while(1) {
+		ADCSRA |= (1 << ADSC);
+		while(ADCSRA & (1 << ADSC));
+		adc_result = ADC;
+		printf("%d\n", adc_result);
+	}
+}
