@@ -5,36 +5,42 @@
 #include <avr/interrupt.h>
 #include "uart.h"
 #include "util/delay.h"
-volatile int echo_ticks;
+volatile uint16_t echo_ticks;
 volatile double distance;
 //static double ten = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));
+volatile bool up = true;
 
 ISR(TIMER1_COMPA_vect) {		//output compare
-	putchar('s');			
+	printf("%d\n", TCNT1);
+	putchar('s');
 	TIMSK1 = (1 << ICIE1);		//disable output compare, enable input capture
 	TCCR1B |= 0x40;				//flip bit 6, next interrupt on rising edge
 	putchar('f');
+	up = true;
 }
 
 ISR(TIMER1_CAPT_vect) {			//input capture
 	putchar('p');
 	//rising edge logic
-	if (PINB & 0x01) {
+	if (up) {
 		echo_ticks = ICR1;										//store starting edge
 		putchar('c');
-		TCCR1B &= ~(0x40);										//flip bit 5, next interrupt on falling edge
+		TCCR1B &= ~(0x40);										//flip bit 6, next interrupt on falling edge
 		putchar('j');
+		up = false;
 	}
 	//falling edge logic
-	if (!(PINB & 0x01)) {
+	if (!up) {
 		echo_ticks = ICR1 - echo_ticks;							//falling edge - starting edge
+		printf("%u\n", echo_ticks);
 		distance = echo_ticks/(16.0*pow(10.0,6))*170.0;			//distance in meters
 		putchar('e');
 		TIMSK1 = 0x02;												//disable input capture, enable output compare
 		PORTB = 0x02;												//set pb1 high
-		OCR1A = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));//trigger of 10us
-		OCR1A %= 0xFFFF;
+		//OCR1A = (uint16_t)(10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));//trigger of 10us
+		OCR1A = TCNT1 + 160;
 		putchar('t');
+		up = true;
 	}
 }
 
@@ -46,8 +52,12 @@ int main (void)
 	sei();
 	TCCR1B = 0x01;												//start clock, no prescaling
 	PORTB = 0x02;												//set pb1 high
+	printf("%d\n", TCNT1);
 	TCCR1A = 0x80;												//clear on compare match
-	OCR1A = (10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));		//trigger of 10us
+	//OCR1A = (uint16_t)(10.0*pow(10.0,-6)) / (1/(16.0*pow(10.0,6)));		//trigger of 10us
+	OCR1A = 160;
 	putchar('o');
-	while(1); 													// Run program forever
+	while(1) { 													// Run program forever
+		putchar('.');
+	}
 }
